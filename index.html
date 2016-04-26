@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>TN Assembly Elections</title>
+
+  <!-- D3 JS -->
+  <script src="//d3js.org/d3.v3.min.js" charset="utf-8"></script>
+  <script src="//d3js.org/topojson.v1.min.js"></script>
+  
+  <!-- JQuery JS -->
+  <script src="https://code.jquery.com/jquery-1.12.3.min.js" 
+          integrity="sha256-aaODHAgvwQW1bFOGXMeX+pC4PZIPsvn2h1sArYOhgXQ=" 
+          crossorigin="anonymous"></script> 
+  
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" 
+        href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" 
+        integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" 
+        crossorigin="anonymous">
+
+  <!-- Bootstrap JS -->
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" 
+          integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" 
+          crossorigin="anonymous"></script>
+
+  <style type="text/css">
+  .selected {
+    fill: red;
+  }
+  </style>
+</head>
+<body class="container">
+
+<div class="row">
+  <div class="col-lg-6" id="map"></div>
+  <div class="col-lg-6">
+    District: <strong><span id="district"></span></strong><br>
+    Taluk: <strong><span id="taluk"></span></strong>
+  </div>
+</div>
+
+  <script type="text/javascript">
+    d3.json("234.json", function(error, json) {
+      if (error) return console.error(error);
+
+      var width = 500;
+      var height = 800;
+      var svg = d3.select("#map").append("svg").
+      attr("width", width).
+      attr("height", height).
+      call(d3.behavior.zoom().scaleExtent([1, 8]).on("zoom", zoom)).
+      call(d3.behavior.drag().on("drag", dragmove)).
+      append("g"); 
+
+      function zoom() {
+        svg.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+      }
+
+      function dragmove(d) {
+        d3.select(this).attr("transform", "translate(" + d3.event.x + "," + d3.event.y + ")");
+      }
+      
+      var projection = d3.geo.mercator().
+      scale(6000).
+      center(d3.geo.centroid(json)).
+      translate([width/2, height/2]);
+      
+      var path = d3.geo.path().
+      projection(projection);
+
+      svg.append("g").
+      selectAll("path").
+      data(json.features).
+      enter().
+      append("path").
+      attr("d", path).
+      style("cursor", "pointer").
+      on("click", click);
+
+      function click(d) {
+        if (d3.event.defaultPrevented) return;        
+        $("#district").text(d.properties.NAME_2);
+        $("#taluk").text(d.properties.NAME_3);
+        d3.select(".selected").classed("selected", false);
+        d3.select(this).classed("selected", true);
+      }
+    });
+  </script>
+</body>
+</html>
